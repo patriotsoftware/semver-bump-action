@@ -1,0 +1,104 @@
+name: Test semver-bump-action
+
+on: 
+  push:
+    branches:
+      - "!main"
+  workflow_dispatch:
+
+jobs:
+  test-action:
+    name: Test semver-bump-action
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix: 
+        include:
+          - initial-tag: "v1.0.0"
+            patch-result: "v1.0.1"
+            minor-result: "v1.1.0"
+            major-result: "v2.0.0"
+            major-tag-result: "v2"
+          - initial-tag: "v1.0.1"
+            patch-result: "v1.0.2"
+            minor-result: "v1.1.0"
+            major-result: "v2.0.0"
+            major-tag-result: "v2"
+          - initial-tag: "v1"
+            patch-result: "v1.0.1"
+            minor-result: "v1.1.0"
+            major-result: "v2.0.0"
+            major-tag-result: "v2"
+          - initial-tag: "vNotANumber"
+            patch-result: "v1.0.0"
+            minor-result: "v1.0.0"
+            major-result: "v1.0.0"
+            major-tag-result: "v1" 
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Run semver-bump-action - patch
+        uses: ./
+        id: semver-bump-action-patch
+        with:
+          dry-run: "true"
+          initial-tag: ${{ matrix.initial-tag }}
+          commit-message: "Testing patch version bump. #patch"
+
+      - name: Verify Results
+        run: |
+          if [[ "${{ steps.semver-bump-action-patch.outputs.resulting-semver-tag}}" != "${{ matrix.patch-result }}" ]]; then
+            echo "❌ Patch result failed for ${{ matrix.initial-tag }} as the input."
+            exit 1
+          fi
+          echo "✅ Success for updating the patch with ${{ matrix.initial-tag }} as the input."
+
+      - name: Run semver-bump-action - minor
+        uses: ./
+        id: semver-bump-action-minor
+        with:
+          dry-run: "true"
+          initial-tag: ${{ matrix.initial-tag }}
+          commit-message: "Testing minor version bump. #minor"
+
+      - name: Verify Results
+        run: |
+          if [[ "${{ steps.semver-bump-action-minor.outputs.resulting-semver-tag}}" != "${{ matrix.minor-result }}" ]]; then
+            echo "❌ minor result failed for ${{ matrix.initial-tag }} as the input."
+            exit 1
+          fi
+          echo "✅ Success for updating the minor with ${{ matrix.initial-tag }} as the input."
+
+      - name: Run semver-bump-action - major
+        uses: ./
+        id: semver-bump-action-major
+        with:
+          dry-run: "true"
+          initial-tag: ${{ matrix.initial-tag }}
+          commit-message: "Testing major version bump. #major"
+
+      - name: Verify Results
+        run: |
+          if [[ "${{ steps.semver-bump-action-major.outputs.resulting-semver-tag}}" != "${{ matrix.major-result }}" ]]; then
+            echo "❌ major result failed for ${{ matrix.initial-tag }} as the input."
+            exit 1
+          fi
+          echo "✅ Success for updating the major with ${{ matrix.initial-tag }} as the input."
+      
+      - name: Run semver-bump-action - major tag only
+        uses: ./
+        id: semver-bump-action-major-tag
+        with:
+          dry-run: "true"
+          initial-tag: ${{ matrix.initial-tag }}
+          commit-message: "Testing major version bump. #major"
+
+      - name: Verify Results
+        run: |
+          if [[ "${{ steps.semver-bump-action-major-tag.outputs.resulting-major-tag}}" != "${{ matrix.major-tag-result }}" ]]; then
+            echo "❌ major tag result failed for ${{ matrix.initial-tag }} as the input."
+            exit 1
+          fi
+          echo "✅ Success for updating the major tag with ${{ matrix.initial-tag }} as the input."
