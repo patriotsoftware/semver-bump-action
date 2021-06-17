@@ -32,5 +32,5 @@ runs:
         INPUT_DRY_RUN: ${{ inputs.dry-run }}
         INPUT_INITIAL_TAG: ${{ inputs.initial-tag }}
         INPUT_COMMIT_MESSAGE: ${{ inputs.commit-message }}
-      run: ./action.sh
+      run: ${{ github.action_path }}/action.sh
       shell: bash
